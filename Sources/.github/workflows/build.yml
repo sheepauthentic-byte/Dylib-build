@@ -1,0 +1,39 @@
+name: Build AutoRoll dylib
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build iOS dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+
+          mkdir -p build
+
+          xcrun --sdk iphoneos clang \
+            -arch arm64 \
+            -isysroot "$SDK" \
+            -miphoneos-version-min=15.0 \
+            -dynamiclib \
+            Sources/AutoRoll.c \
+            Sources/AutoRoll.dylib.c \
+            -o build/AutoRoll.dylib
+
+          file build/AutoRoll.dylib
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoRoll-iOS-arm64
+          path: build/AutoRoll.dylib
